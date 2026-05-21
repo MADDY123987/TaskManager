@@ -1,0 +1,142 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: team-task-manager
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/taskmanager
+    username: root
+    password: Mad20041
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      timeout: 2000ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 60000
+
+  rabbitmq:
+    addresses: ${RABBITMQ_URL:amqp://guest:guest@localhost:5672}
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000
+        max-attempts: 3
+        multiplier: 2
+
+# JWT
+jwt:
+  secret: ${JWT_SECRET:ThisIsAVeryLongSecretKeyThatShouldBeChangedInProduction1234567890}
+  expiration: 86400000        # 24h in ms
+  refresh-expiration: 604800000 # 7 days
+
+# Resilience4j
+resilience4j:
+  circuitbreaker:
+    instances:
+      dashboardService:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+      taskService:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        register-health-indicator: true
+      projectService:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        register-health-indicator: true
+  retry:
+    instances:
+      dashboardService:
+        max-attempts: 3
+        wait-duration: 100ms
+        exponential-backoff-multiplier: 2
+        retry-exceptions:
+          - org.springframework.dao.TransientDataAccessException
+          - java.sql.SQLTransientException
+      taskService:
+        max-attempts: 3
+        wait-duration: 200ms
+        exponential-backoff-multiplier: 2
+  bulkhead:
+    instances:
+      dashboardService:
+        max-concurrent-calls: 10
+        max-wait-duration: 0ms
+      taskService:
+        max-concurrent-calls: 20
+        max-wait-duration: 500ms
+
+# Rate limiting
+rate-limit:
+  capacity: 100         # max requests
+  refill-tokens: 100    # tokens refilled per window
+  refill-duration: 60   # seconds
+
+# RabbitMQ queues
+rabbitmq:
+  queues:
+    task-assigned: task.assigned
+    task-overdue: task.overdue.check
+  exchanges:
+    task-events: task.events
+  routing-keys:
+    task-assigned: task.assigned.key
+    task-overdue: task.overdue.key
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,circuitbreakers,circuitbreakerevents
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+# OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+logging:
+  level:
+    com.taskmanager: DEBUG
+    org.springframework.security: INFO
+    io.github.resilience4j: INFO

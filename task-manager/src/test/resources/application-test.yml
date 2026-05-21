@@ -1,0 +1,55 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false   # let Hibernate create schema in tests
+
+  # Disable Redis for tests - use simple in-memory cache
+  cache:
+    type: simple
+
+  # Disable RabbitMQ auto-connect
+  rabbitmq:
+    addresses: ""
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+jwt:
+  secret: TestSecretKeyForJWTThatIsAtLeast256BitsLong1234567890ABCDEF
+  expiration: 86400000
+
+rate-limit:
+  capacity: 10000  # effectively disable rate limiting in tests
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      dashboardService:
+        sliding-window-size: 100
+        failure-rate-threshold: 100
+      taskService:
+        sliding-window-size: 100
+        failure-rate-threshold: 100
+      projectService:
+        sliding-window-size: 100
+        failure-rate-threshold: 100
+  retry:
+    instances:
+      dashboardService:
+        max-attempts: 1
+      taskService:
+        max-attempts: 1
