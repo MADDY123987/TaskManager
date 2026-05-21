@@ -10,11 +10,11 @@ export function RecentTasksTable({ tasks }: { tasks: Task[] }) {
   }
 
   return (
-    <TableContainer component={Paper}>
-      <Typography variant="h6" sx={{ p: 2 }}>
+    <TableContainer component={Paper} sx={{ overflow: 'hidden' }}>
+      <Typography variant="h6" sx={{ p: 2.25, pb: 1.5 }}>
         Recent Tasks
       </Typography>
-      <Table>
+      <Table sx={{ minWidth: 760 }}>
         <TableHead>
           <TableRow>
             <TableCell>Title</TableCell>
@@ -26,8 +26,8 @@ export function RecentTasksTable({ tasks }: { tasks: Task[] }) {
         </TableHead>
         <TableBody>
           {tasks.map((task) => (
-            <TableRow key={task.id} hover>
-              <TableCell>{task.title}</TableCell>
+            <TableRow key={task.id} hover sx={{ '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.03)' } }}>
+              <TableCell sx={{ fontWeight: 600 }}>{task.title}</TableCell>
               <TableCell>{task.projectName ?? task.project?.name ?? 'Unassigned'}</TableCell>
               <TableCell>
                 <StatusChip status={task.status} />

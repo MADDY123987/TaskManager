@@ -23,8 +23,8 @@ export function TasksTable({
   if (!tasks.length) return <EmptyState title="No tasks yet" description="Create the first task to start tracking work." />;
 
   return (
-    <TableContainer component={Paper}>
-      <Table>
+    <TableContainer component={Paper} sx={{ overflow: 'hidden' }}>
+      <Table sx={{ minWidth: 860 }}>
         <TableHead>
           <TableRow>
             <TableCell>Title</TableCell>
@@ -37,8 +37,8 @@ export function TasksTable({
         </TableHead>
         <TableBody>
           {tasks.map((task) => (
-            <TableRow key={task.id} hover>
-              <TableCell>{task.title}</TableCell>
+            <TableRow key={task.id} hover sx={{ '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.03)' } }}>
+              <TableCell sx={{ fontWeight: 600 }}>{task.title}</TableCell>
               <TableCell>{task.assignee?.name ?? (typeof task.assignedTo === 'object' ? task.assignedTo?.name : task.assignedTo) ?? 'Unassigned'}</TableCell>
               <TableCell>
                 <PriorityChip priority={task.priority} />

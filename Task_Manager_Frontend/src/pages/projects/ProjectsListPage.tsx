@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Button, Card, CardActions, CardContent, Grid, IconButton, InputAdornment, MenuItem, Skeleton, Stack, TextField, Typography } from '@mui/material';
+import { Box, Button, Card, CardActions, CardContent, Chip, Grid, IconButton, InputAdornment, MenuItem, Skeleton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -73,14 +73,34 @@ export function ProjectsListPage() {
         <Grid container spacing={2}>
           {projects.map((project) => (
             <Grid key={project.id} size={{ xs: 12, md: 6, xl: 4 }}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: 'primary.light',
+                    boxShadow: '0 16px 34px rgba(15, 23, 42, 0.08)',
+                  },
+                }}
+              >
                 <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant="h6">{project.name}</Typography>
-                  <Typography color="text.secondary" sx={{ mt: 1, minHeight: 48 }}>{project.description || 'No description provided.'}</Typography>
-                  <Typography variant="body2" sx={{ mt: 2 }}>Members: {project.memberCount ?? project.members?.length ?? 0}</Typography>
-                  <Typography variant="body2" color="text.secondary">Created {formatDate(project.createdAt)}</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                    <Typography variant="h6" sx={{ lineHeight: 1.25 }}>
+                      {project.name}
+                    </Typography>
+                    <Chip size="small" label={`${project.memberCount ?? project.members?.length ?? 0} members`} />
+                  </Box>
+                  <Typography color="text.secondary" sx={{ mt: 1.25, minHeight: 52 }}>
+                    {project.description || 'No description provided.'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                    Created {formatDate(project.createdAt)}
+                  </Typography>
                 </CardContent>
-                <CardActions>
+                <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
                   <Button startIcon={<OpenInNewOutlinedIcon />} onClick={() => navigate(`/projects/${project.id}`)}>Open</Button>
                   <IconButton onClick={() => setDialogProject(project)} aria-label="Edit project"><EditOutlinedIcon /></IconButton>
                   <IconButton onClick={() => setDeleteTarget(project)} aria-label="Delete project"><DeleteOutlineOutlinedIcon /></IconButton>

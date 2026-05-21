@@ -26,11 +26,16 @@ export function Sidebar({ width, mobileOpen, onClose }: { width: number; mobileO
 
   const content = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Toolbar sx={{ gap: 1 }}>
+      <Toolbar sx={{ gap: 1, minHeight: { xs: 64, md: 68 } }}>
         <Box sx={{ width: 32, height: 32, borderRadius: 1.5, bgcolor: 'primary.main', color: 'white', display: 'grid', placeItems: 'center', fontWeight: 800 }}>T</Box>
-        <Typography variant="subtitle1" fontWeight={800}>
-          Task Manager
-        </Typography>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle1" fontWeight={800} lineHeight={1.15}>
+            Task Manager
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Team workspace
+          </Typography>
+        </Box>
       </Toolbar>
       <Divider />
       <List sx={{ px: 1, py: 2, flexGrow: 1 }}>
@@ -43,7 +48,15 @@ export function Sidebar({ width, mobileOpen, onClose }: { width: number; mobileO
             sx={{
               borderRadius: 1,
               mb: 0.5,
-              '&.active': { bgcolor: 'primary.main', color: 'primary.contrastText', '& .MuiListItemIcon-root': { color: 'inherit' } },
+              minHeight: 44,
+              color: 'text.secondary',
+              '& .MuiListItemIcon-root': { minWidth: 40, color: 'inherit' },
+              '&.active': {
+                bgcolor: 'rgba(37, 99, 235, 0.1)',
+                color: 'primary.main',
+                '& .MuiListItemText-primary': { fontWeight: 700 },
+              },
+              '&:hover': { bgcolor: 'rgba(15, 23, 42, 0.04)' },
             }}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
@@ -68,7 +81,21 @@ export function Sidebar({ width, mobileOpen, onClose }: { width: number; mobileO
       <Drawer variant="temporary" open={mobileOpen} onClose={onClose} ModalProps={{ keepMounted: true }} sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { width } }}>
         {content}
       </Drawer>
-      <Drawer variant="permanent" open sx={{ display: { xs: 'none', md: 'block' }, '& .MuiDrawer-paper': { width, boxSizing: 'border-box', borderRight: 1, borderColor: 'divider' } }}>
+      <Drawer
+        variant="permanent"
+        open
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            width,
+            boxSizing: 'border-box',
+            borderRight: 1,
+            borderColor: 'divider',
+            bgcolor: 'rgba(255,255,255,0.88)',
+            backdropFilter: 'blur(14px)',
+          },
+        }}
+      >
         {content}
       </Drawer>
     </Box>
