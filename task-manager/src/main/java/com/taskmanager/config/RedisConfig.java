@@ -13,6 +13,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.*;
+import redis.clients.jedis.JedisPool;
 
 import java.time.Duration;
 import java.util.Map;
@@ -27,6 +28,10 @@ public class RedisConfig {
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return mapper;
+    }
+    @Bean
+    public JedisPool jedisPool() {
+        return new JedisPool("localhost", 6379);
     }
 
     @Bean

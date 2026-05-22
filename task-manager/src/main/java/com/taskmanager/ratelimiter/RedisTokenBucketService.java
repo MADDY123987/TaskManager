@@ -1,8 +1,10 @@
 package com.taskmanager.ratelimiter;
+import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 
+@Service
 public class RedisTokenBucketService {
     private final JedisPool jedisPool;
     private final RateLimiterProperties rateLimiterProperties;
@@ -35,8 +37,14 @@ public class RedisTokenBucketService {
                 return false;
             }
 
-            long remaining = jedis.decr(tokenKey);
-            return remaining >= 0;
+            Long remaining = jedis.decr(tokenKey);
+
+            if (remaining < 0) {
+                jedis.incr(tokenKey);
+                return false;
+            }
+
+            return true;
         }
     }
 

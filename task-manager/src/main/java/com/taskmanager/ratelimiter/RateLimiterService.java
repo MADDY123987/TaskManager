@@ -1,5 +1,9 @@
 package com.taskmanager.ratelimiter;
 
+
+import org.springframework.stereotype.Service;
+
+@Service
 public class RateLimiterService {
 
     private final RedisTokenBucketService redisTokenBucketService;

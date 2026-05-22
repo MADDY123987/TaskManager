@@ -98,12 +98,9 @@ resilience4j:
         max-wait-duration: 500ms
 
 # Rate limiting
-rate-limit:
-  login-limit: 5
-  login-window-millis: 60000
-  signup-limit: 3
-  signup-window-millis: 3600000
-
+rate-limiter:
+  capacity: 10
+  refill-rate: 5
 # RabbitMQ queues
 rabbitmq:
   queues:
