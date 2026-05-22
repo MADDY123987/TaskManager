@@ -32,7 +32,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         if (path.startsWith("/swagger-ui")
-                || path.startsWith("/api-docs")
+                || path.startsWith("/v3/api-docs")
                 || path.startsWith("/actuator")) {
 
             filterChain.doFilter(request, response);

@@ -1,11 +1,11 @@
-import { AppBar, Avatar, Badge, Box, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography } from '@mui/material';
+import { AppBar, Avatar, Box, IconButton, Menu, MenuItem, Toolbar, Tooltip, Typography } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { clearCredentials } from '../../features/auth/authSlice';
+import { NotificationBell } from '../../features/notifications/NotificationBell';
 
 export function AppTopBar({ drawerWidth, onMenuClick }: { drawerWidth: number; onMenuClick: () => void }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -42,13 +42,7 @@ export function AppTopBar({ drawerWidth, onMenuClick }: { drawerWidth: number; o
             Team Task Manager
           </Typography>
         </Box>
-        <Tooltip title="Notifications">
-          <IconButton aria-label="Notifications">
-            <Badge color="error" variant="dot">
-              <NotificationsOutlinedIcon />
-            </Badge>
-          </IconButton>
-        </Tooltip>
+        <NotificationBell />
         <Tooltip title="Account">
           <IconButton onClick={(event) => setAnchorEl(event.currentTarget)} aria-label="Account menu">
             <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main', fontWeight: 700 }}>{user?.name?.charAt(0)?.toUpperCase() ?? 'U'}</Avatar>

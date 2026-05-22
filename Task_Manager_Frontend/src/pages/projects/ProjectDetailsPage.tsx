@@ -13,6 +13,8 @@ import { AddMemberDialog, type AddMemberForm } from '../../components/forms/AddM
 import { ProjectDialog, type ProjectForm } from '../../components/forms/ProjectDialog';
 import { TaskDialog, type TaskForm } from '../../components/forms/TaskDialog';
 import { TasksTable } from '../../components/tables/TasksTable';
+import { KanbanBoard } from '../../features/kanban/KanbanBoard';
+import { ProjectSettingsPanel } from '../../features/project-settings/ProjectSettingsPanel';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import type { ProjectMember, Task, TaskStatus } from '../../types/api';
 import { formatDate } from '../../utils/format';
@@ -100,6 +102,8 @@ export function ProjectDetailsPage() {
           <Tab label="Overview" />
           <Tab label="Members" />
           <Tab label="Tasks" />
+          <Tab label="Kanban" />
+          <Tab label="Settings" />
         </Tabs>
       </Paper>
       {tab === 0 && (
@@ -125,6 +129,8 @@ export function ProjectDetailsPage() {
           <TasksTable tasks={tasks} onView={setViewTask} onEdit={setTaskDialog} onDelete={setDeleteTaskTarget} onStatusChange={changeStatus} />
         </>
       )}
+      {tab === 3 && <KanbanBoard tasks={tasks} onStatusChange={changeStatus} />}
+      {tab === 4 && <ProjectSettingsPanel project={project} />}
       <ProjectDialog open={projectDialog} project={project} loading={updateProjectState.isLoading} onClose={() => setProjectDialog(false)} onSubmit={saveProject} />
       <AddMemberDialog open={memberDialog} loading={addMemberState.isLoading} onClose={() => setMemberDialog(false)} onSubmit={saveMember} />
       <TaskDialog open={taskDialog !== undefined} task={taskDialog} loading={createTaskState.isLoading || updateTaskState.isLoading} onClose={() => setTaskDialog(undefined)} onSubmit={saveTask} />

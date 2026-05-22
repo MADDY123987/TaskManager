@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.*;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.time.Duration;
 import java.util.Map;
@@ -31,9 +32,17 @@ public class RedisConfig {
     }
     @Bean
     public JedisPool jedisPool() {
-        return new JedisPool("localhost", 6379);
-    }
 
+        JedisPoolConfig config = new JedisPoolConfig();
+
+        config.setJmxEnabled(false);
+
+        return new JedisPool(
+                config,
+                "localhost",
+                6379
+        );
+    }
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory,
                                                         ObjectMapper objectMapper) {

@@ -2,6 +2,10 @@ import { Box, Divider, Drawer, Stack, Typography } from '@mui/material';
 import type { Task } from '../../types/api';
 import { formatDate } from '../../utils/format';
 import { PriorityChip, StatusChip } from './StatusChip';
+import { CommentList } from '../../features/comments/CommentList';
+import { ActivityTimeline } from '../../features/activity/ActivityTimeline';
+import { useAppSelector } from '../../hooks/redux';
+import { AttachmentList } from '../../features/attachments/AttachmentList';
 
 function Detail({ label, value }: { label: string; value?: React.ReactNode }) {
   return (
@@ -15,8 +19,10 @@ function Detail({ label, value }: { label: string; value?: React.ReactNode }) {
 }
 
 export function TaskDetailsDrawer({ task, open, onClose }: { task: Task | null; open: boolean; onClose: () => void }) {
+  const currentUser = useAppSelector((state) => state.auth.user);
+
   return (
-    <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 440 }, p: 3 } }}>
+    <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 560 }, p: 3 } }}>
       {task && (
         <Stack spacing={2}>
           <Box>
@@ -32,6 +38,12 @@ export function TaskDetailsDrawer({ task, open, onClose }: { task: Task | null; 
           <Detail label="Due date" value={formatDate(task.dueDate)} />
           <Detail label="Created" value={formatDate(task.createdAt)} />
           <Detail label="Updated" value={formatDate(task.updatedAt)} />
+          <Divider />
+          <AttachmentList />
+          <Divider />
+          <CommentList taskId={task.id} currentUser={currentUser} />
+          <Divider />
+          <ActivityTimeline task={task} />
         </Stack>
       )}
     </Drawer>

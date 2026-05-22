@@ -39,7 +39,7 @@ public class SecurityConfig {
             "/api/auth/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/api-docs/**",
+            "/v3/api-docs/**",
             "/actuator/health"
     };
 
@@ -47,28 +47,37 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors ->
+                        cors.configurationSource(corsConfigurationSource())
+                )
+
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm ->
-                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
                 )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_PATHS).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated()
+
+                .authorizeHttpRequests(auth ->
+                        auth
+                                .requestMatchers(PUBLIC_PATHS).permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .anyRequest().authenticated()
                 )
+
                 .authenticationProvider(authenticationProvider())
 
-                // Rate Limiter first
+                // Rate Limiter executes first
                 .addFilterBefore(
                         rateLimitFilter,
-                        JwtAuthFilter.class
+                        UsernamePasswordAuthenticationFilter.class
                 )
 
-                // JWT Authentication second
-                .addFilterBefore(
+                // JWT Authentication executes after Rate Limiter
+                .addFilterAfter(
                         jwtAuthFilter,
-                        UsernamePasswordAuthenticationFilter.class
+                        RateLimitFilter.class
                 );
 
         return http.build();
@@ -88,8 +97,8 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config)
-            throws Exception {
+            AuthenticationConfiguration config
+    ) throws Exception {
 
         return config.getAuthenticationManager();
     }
@@ -105,7 +114,9 @@ public class SecurityConfig {
         CorsConfiguration config =
                 new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOriginPatterns(
+                List.of("*")
+        );
 
         config.setAllowedMethods(
                 List.of(
@@ -118,7 +129,9 @@ public class SecurityConfig {
                 )
         );
 
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(
+                List.of("*")
+        );
 
         config.setAllowCredentials(true);
 
