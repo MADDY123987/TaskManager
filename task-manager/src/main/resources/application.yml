@@ -99,9 +99,10 @@ resilience4j:
 
 # Rate limiting
 rate-limit:
-  capacity: 100         # max requests
-  refill-tokens: 100    # tokens refilled per window
-  refill-duration: 60   # seconds
+  login-limit: 5
+  login-window-millis: 60000
+  signup-limit: 3
+  signup-window-millis: 3600000
 
 # RabbitMQ queues
 rabbitmq:
