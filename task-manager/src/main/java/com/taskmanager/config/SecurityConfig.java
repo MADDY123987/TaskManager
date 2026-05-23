@@ -40,7 +40,17 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**",
-            "/actuator/health"
+            "/actuator/health",
+            "/ws/**"                  // WebSocket handshake endpoint
+    };
+
+    private static final String[] AUTHENTICATED_PATHS = {
+            "/api/notifications/**",
+            "/api/profile/**",
+            "/api/audit/**",
+            "/api/projects/**",
+            "/api/tasks/**",
+            "/api/dashboard/**"
     };
 
     @Bean
@@ -63,6 +73,7 @@ public class SecurityConfig {
                         auth
                                 .requestMatchers(PUBLIC_PATHS).permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(AUTHENTICATED_PATHS).authenticated()
                                 .anyRequest().authenticated()
                 )
 

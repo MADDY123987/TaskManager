@@ -30,11 +30,10 @@ public class RedisConfig {
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return mapper;
     }
+
     @Bean
     public JedisPool jedisPool() {
-
         JedisPoolConfig config = new JedisPoolConfig();
-
         config.setJmxEnabled(false);
 
         return new JedisPool(
@@ -43,9 +42,12 @@ public class RedisConfig {
                 6379
         );
     }
+
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory,
-                                                        ObjectMapper objectMapper) {
+    public RedisTemplate<String, Object> redisTemplate(
+            RedisConnectionFactory factory,
+            ObjectMapper objectMapper
+    ) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
 
@@ -56,33 +58,53 @@ public class RedisConfig {
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(serializer);
         template.setHashValueSerializer(serializer);
+
         template.afterPropertiesSet();
         return template;
     }
 
     @Bean
-    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory factory) {
+    public StringRedisTemplate stringRedisTemplate(
+            RedisConnectionFactory factory
+    ) {
         return new StringRedisTemplate(factory);
     }
 
     @Bean
-    public CacheManager cacheManager(RedisConnectionFactory factory, ObjectMapper objectMapper) {
+    public CacheManager cacheManager(
+            RedisConnectionFactory factory,
+            ObjectMapper objectMapper
+    ) {
+
         GenericJackson2JsonRedisSerializer serializer =
                 new GenericJackson2JsonRedisSerializer(objectMapper);
 
-        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofSeconds(60))
-                .serializeKeysWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(serializer))
-                .disableCachingNullValues();
+        RedisCacheConfiguration defaultConfig =
+                RedisCacheConfiguration.defaultCacheConfig()
+                        .entryTtl(Duration.ofSeconds(60))
+                        .serializeKeysWith(
+                                RedisSerializationContext.SerializationPair
+                                        .fromSerializer(new StringRedisSerializer())
+                        )
+                        .serializeValuesWith(
+                                RedisSerializationContext.SerializationPair
+                                        .fromSerializer(serializer)
+                        )
+                        .disableCachingNullValues();
 
-        // Per-cache TTLs
+        // Cache-specific TTLs
         Map<String, RedisCacheConfiguration> cacheConfigs = Map.of(
-            "dashboard",    defaultConfig.entryTtl(Duration.ofSeconds(60)),
-            "projects",     defaultConfig.entryTtl(Duration.ofSeconds(120)),
-            "projectMembers", defaultConfig.entryTtl(Duration.ofSeconds(120))
+                "dashboard",
+                defaultConfig.entryTtl(Duration.ofSeconds(60)),
+
+                "projects",
+                defaultConfig.entryTtl(Duration.ofSeconds(120)),
+
+                "projectMembers",
+                defaultConfig.entryTtl(Duration.ofSeconds(120)),
+
+                "projectAnalytics",
+                defaultConfig.entryTtl(Duration.ofMinutes(5))
         );
 
         return RedisCacheManager.builder(factory)
