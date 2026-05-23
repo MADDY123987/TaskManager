@@ -12,7 +12,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "projects")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Project {
 
     @Id
@@ -40,4 +44,20 @@ public class Project {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // ── Phase 3 additions ────────────────────────────────────────────────────
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean archived = false;
+
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
+
+    @Column(name = "owner_id")
+    private Long ownerId;
+
+    @Column(columnDefinition = "TEXT")
+    @Builder.Default
+    private String settings = "{}";
 }

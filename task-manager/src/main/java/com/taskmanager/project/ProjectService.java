@@ -3,6 +3,8 @@ package com.taskmanager.project;
 import com.taskmanager.auth.entity.User;
 import com.taskmanager.auth.entity.UserRepository;
 import com.taskmanager.exception.*;
+import com.taskmanager.kanban.KanbanService;
+import com.taskmanager.notification.NotificationFacade;
 import com.taskmanager.project.dto.ProjectDTOs.*;
 import com.taskmanager.project.entity.*;
 import com.taskmanager.project.entity.ProjectMember.Role;
@@ -25,6 +27,8 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository memberRepository;
     private final UserRepository userRepository;
+    private final KanbanService kanbanService;           // ← NEW
+    private final NotificationFacade notificationFacade; // ← NEW
 
     @Transactional
     @CacheEvict(value = "projects", key = "#userId")
@@ -36,6 +40,7 @@ public class ProjectService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .createdBy(creator)
+                .ownerId(userId)                          // ← NEW: set owner on creation
                 .build();
 
         Project saved = projectRepository.save(project);
@@ -47,6 +52,9 @@ public class ProjectService {
                 .role(Role.ADMIN)
                 .build();
         memberRepository.save(adminMember);
+
+        // ── NEW: seed default kanban columns ────────────────────────────────
+        kanbanService.seedDefaultColumns(saved.getId());
 
         log.info("Project '{}' created by user {}", saved.getName(), userId);
         return getProjectById(saved.getId(), userId);
@@ -116,14 +124,29 @@ public class ProjectService {
             throw new BadRequestException("User is already a member of this project");
         }
 
+        Role roleToAssign = request.getRole() != null ? request.getRole() : Role.MEMBER;
+
         ProjectMember member = ProjectMember.builder()
                 .project(project)
                 .user(userToAdd)
-                .role(request.getRole() != null ? request.getRole() : Role.MEMBER)
+                .role(roleToAssign)
                 .build();
 
         ProjectMember saved = memberRepository.save(member);
         log.info("User {} added to project {} by admin {}", request.getUserId(), projectId, adminUserId);
+
+        // ── NEW: notify the new member ───────────────────────────────────────
+        User admin = userRepository.findById(adminUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", adminUserId));
+
+        notificationFacade.memberAdded(
+                userToAdd.getId(),
+                userToAdd.getEmail(),
+                userToAdd.getName(),
+                project.getName(),
+                admin.getName(),
+                roleToAssign.name(),
+                projectId);
 
         return MemberDTO.builder()
                 .userId(userToAdd.getId())
