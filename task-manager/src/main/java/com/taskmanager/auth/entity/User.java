@@ -1,5 +1,7 @@
 package com.taskmanager.auth.entity;
 
+
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,7 +11,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id
@@ -24,6 +30,29 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    // ===== Profile Fields =====
+
+    @Column(length = 30)
+    private String phone;
+
+    @Column(length = 100)
+    private String department;
+
+    @Column(length = 100)
+    private String designation;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
+    @Builder.Default
+    @Column(name = "notification_email_enabled", nullable = false)
+    private boolean notificationEmailEnabled = true;
+
+    // ===== Audit Fields =====
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
