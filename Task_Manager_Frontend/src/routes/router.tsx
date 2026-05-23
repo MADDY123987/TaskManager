@@ -1,15 +1,20 @@
+import { lazy } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AuthLayout } from '../pages/auth/AuthLayout';
-import { LoginPage } from '../pages/auth/LoginPage';
-import { SignupPage } from '../pages/auth/SignupPage';
-import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { ErrorPage } from '../pages/ErrorPage';
-import { ProjectDetailsPage } from '../pages/projects/ProjectDetailsPage';
-import { ProjectsListPage } from '../pages/projects/ProjectsListPage';
-import { MyTasksPage } from '../pages/tasks/MyTasksPage';
-import { ProfilePage } from '../pages/profile/ProfilePage';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AppLayout } from '../layouts/AppLayout';
+import { LazyPage } from './LazyPage';
+
+const LoginPage = lazy(() => import('../pages/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
+const SignupPage = lazy(() => import('../pages/auth/SignupPage').then((module) => ({ default: module.SignupPage })));
+const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage })));
+const ProjectsListPage = lazy(() => import('../pages/projects/ProjectsListPage').then((module) => ({ default: module.ProjectsListPage })));
+const ProjectDetailsPage = lazy(() => import('../pages/projects/ProjectDetailsPage').then((module) => ({ default: module.ProjectDetailsPage })));
+const MyTasksPage = lazy(() => import('../pages/tasks/MyTasksPage').then((module) => ({ default: module.MyTasksPage })));
+const ProfilePage = lazy(() => import('../pages/profile/ProfilePage').then((module) => ({ default: module.ProfilePage })));
+const AuditPage = lazy(() => import('../pages/audit/AuditPage').then((module) => ({ default: module.AuditPage })));
+const AnalyticsPage = lazy(() => import('../features/analytics/AnalyticsPage').then((module) => ({ default: module.AnalyticsPage })));
 
 export const router = createBrowserRouter([
   {
@@ -20,8 +25,8 @@ export const router = createBrowserRouter([
   {
     element: <AuthLayout />,
     children: [
-      { path: '/login', element: <LoginPage /> },
-      { path: '/signup', element: <SignupPage /> },
+      { path: '/login', element: <LazyPage><LoginPage /></LazyPage> },
+      { path: '/signup', element: <LazyPage><SignupPage /></LazyPage> },
     ],
   },
   {
@@ -30,11 +35,13 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { path: '/dashboard', element: <DashboardPage /> },
-          { path: '/projects', element: <ProjectsListPage /> },
-          { path: '/projects/:projectId', element: <ProjectDetailsPage /> },
-          { path: '/my-tasks', element: <MyTasksPage /> },
-          { path: '/profile', element: <ProfilePage /> },
+          { path: '/dashboard', element: <LazyPage><DashboardPage /></LazyPage> },
+          { path: '/projects', element: <LazyPage><ProjectsListPage /></LazyPage> },
+          { path: '/projects/:projectId', element: <LazyPage><ProjectDetailsPage /></LazyPage> },
+          { path: '/my-tasks', element: <LazyPage><MyTasksPage /></LazyPage> },
+          { path: '/analytics', element: <LazyPage><AnalyticsPage /></LazyPage> },
+          { path: '/audit', element: <LazyPage><AuditPage /></LazyPage> },
+          { path: '/profile', element: <LazyPage><ProfilePage /></LazyPage> },
         ],
       },
     ],

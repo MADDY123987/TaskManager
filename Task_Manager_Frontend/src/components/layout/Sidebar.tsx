@@ -4,6 +4,8 @@ import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurnedInOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
+import AnalyticsOutlinedIcon from '@mui/icons-material/AnalyticsOutlined';
+import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../../hooks/redux';
 import { clearCredentials } from '../../features/auth/authSlice';
@@ -12,6 +14,8 @@ const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: <DashboardOutlinedIcon /> },
   { label: 'Projects', path: '/projects', icon: <FolderOutlinedIcon /> },
   { label: 'My Tasks', path: '/my-tasks', icon: <AssignmentTurnedInOutlinedIcon /> },
+  { label: 'Analytics', path: '/analytics', icon: <AnalyticsOutlinedIcon /> },
+  { label: 'Audit Logs', path: '/audit', icon: <FactCheckOutlinedIcon /> },
   { label: 'Profile', path: '/profile', icon: <PersonOutlineOutlinedIcon /> },
 ];
 
