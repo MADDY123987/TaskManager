@@ -1,10 +1,13 @@
 package com.taskmanager.task;
 
+import com.taskmanager.activity.ActivityService;
+import com.taskmanager.activity.ActivityService.Action;
 import com.taskmanager.auth.entity.User;
 import com.taskmanager.auth.entity.UserRepository;
 import com.taskmanager.exception.*;
 import com.taskmanager.messaging.TaskEventPublisher;
 import com.taskmanager.messaging.TaskEvents;
+import com.taskmanager.notification.NotificationFacade;
 import com.taskmanager.project.entity.*;
 import com.taskmanager.project.entity.ProjectMember.Role;
 import com.taskmanager.task.dto.TaskDTOs.*;
@@ -30,11 +33,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TaskService {
 
-    private final TaskRepository taskRepository;
-    private final ProjectRepository projectRepository;
+    private final TaskRepository          taskRepository;
+    private final ProjectRepository       projectRepository;
     private final ProjectMemberRepository memberRepository;
-    private final UserRepository userRepository;
-    private final TaskEventPublisher eventPublisher;
+    private final UserRepository          userRepository;
+    private final TaskEventPublisher      eventPublisher;
+    private final NotificationFacade      notificationFacade; // ← NEW
+    private final ActivityService         activityService;    // ← NEW
+
+    // ── Create ────────────────────────────────────────────────────────────────
 
     @Transactional
     @CacheEvict(value = "dashboard", allEntries = true)
@@ -51,7 +58,6 @@ public class TaskService {
         if (request.getAssignedTo() != null) {
             assignee = userRepository.findById(request.getAssignedTo())
                     .orElseThrow(() -> new ResourceNotFoundException("Assignee user", request.getAssignedTo()));
-            // Verify assignee is a project member
             if (!memberRepository.existsByProjectIdAndUserId(projectId, assignee.getId())) {
                 throw new BadRequestException("Assigned user is not a member of this project");
             }
@@ -76,14 +82,22 @@ public class TaskService {
             publishAssignmentEvent(saved, assignee, creator, project);
         }
 
+        // ── NEW: record activity ─────────────────────────────────────────────
+        activityService.record(
+                saved.getId(), projectId, creatorId,
+                Action.TASK_CREATED, null, null, null);
+
         return toDTO(saved);
     }
+
+    // ── List ──────────────────────────────────────────────────────────────────
 
     @CircuitBreaker(name = "taskService", fallbackMethod = "getTasksFallback")
     @Retry(name = "taskService")
     @Bulkhead(name = "taskService")
     @Transactional(readOnly = true)
-    public List<TaskDTO> getTasksForProject(Long projectId, String statusStr, Long assigneeId, Long requesterId) {
+    public List<TaskDTO> getTasksForProject(Long projectId, String statusStr,
+                                            Long assigneeId, Long requesterId) {
         assertMembership(projectId, requesterId);
 
         Status status = null;
@@ -94,7 +108,6 @@ public class TaskService {
             }
         }
 
-        // Members only see their own tasks
         ProjectMember requester = memberRepository.findByProjectIdAndUserId(projectId, requesterId)
                 .orElseThrow(() -> new ForbiddenException("Not a project member"));
 
@@ -108,10 +121,12 @@ public class TaskService {
     }
 
     public List<TaskDTO> getTasksFallback(Long projectId, String statusStr,
-                                           Long assigneeId, Long requesterId, Exception ex) {
+                                          Long assigneeId, Long requesterId, Exception ex) {
         log.warn("Circuit breaker open for getTasksForProject: {}", ex.getMessage());
         return List.of();
     }
+
+    // ── Get by ID ─────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public TaskDTO getTaskById(Long taskId, Long requesterId) {
@@ -121,7 +136,6 @@ public class TaskService {
         Long projectId = task.getProject().getId();
         assertMembership(projectId, requesterId);
 
-        // Members can only see tasks assigned to them
         ProjectMember member = memberRepository.findByProjectIdAndUserId(projectId, requesterId)
                 .orElseThrow(() -> new ForbiddenException("Not a member"));
 
@@ -133,6 +147,8 @@ public class TaskService {
         return toDTO(task);
     }
 
+    // ── Update ────────────────────────────────────────────────────────────────
+
     @Transactional
     @CacheEvict(value = "dashboard", allEntries = true)
     public TaskDTO updateTask(Long taskId, UpdateTaskRequest request, Long requesterId) {
@@ -141,16 +157,64 @@ public class TaskService {
 
         Long projectId = task.getProject().getId();
 
+        // ── NEW: capture old values before any mutation ──────────────────────
+        Status oldStatus   = task.getStatus();
+        String oldPriority = task.getPriority() != null ? task.getPriority().name() : null;
+        String oldAssignee = task.getAssignedTo() != null ? task.getAssignedTo().getName() : null;
+        String oldDueDate  = task.getDueDate() != null ? task.getDueDate().toString() : null;
+
         ProjectMember member = memberRepository.findByProjectIdAndUserId(projectId, requesterId)
                 .orElseThrow(() -> new ForbiddenException("You are not a member of this project"));
 
         if (member.getRole() == Role.ADMIN) {
-            // Admin can update everything
+
             if (request.getTitle() != null)       task.setTitle(request.getTitle());
             if (request.getDescription() != null) task.setDescription(request.getDescription());
-            if (request.getDueDate() != null)     task.setDueDate(request.getDueDate());
-            if (request.getPriority() != null)    task.setPriority(request.getPriority());
-            if (request.getStatus() != null)      task.setStatus(request.getStatus());
+
+            // ── NEW: record due date change ──────────────────────────────────
+            if (request.getDueDate() != null) {
+                activityService.record(taskId, projectId, requesterId,
+                        Action.DUE_DATE_CHANGED, "dueDate",
+                        oldDueDate, request.getDueDate().toString());
+                task.setDueDate(request.getDueDate());
+            }
+
+            // ── NEW: record priority change ──────────────────────────────────
+            if (request.getPriority() != null) {
+                activityService.record(taskId, projectId, requesterId,
+                        Action.PRIORITY_CHANGED, "priority",
+                        oldPriority, request.getPriority().name());
+                task.setPriority(request.getPriority());
+            }
+
+            // ── NEW: record status change + taskCompleted notification ────────
+            if (request.getStatus() != null) {
+                activityService.record(taskId, projectId, requesterId,
+                        Action.STATUS_CHANGED, "status",
+                        oldStatus.name(), request.getStatus().name());
+
+                if (request.getStatus() == Status.DONE && oldStatus != Status.DONE) {
+                    User requester = userRepository.findById(requesterId)
+                            .orElseThrow(() -> new ResourceNotFoundException("User", requesterId));
+                    // Notify project creator / task creator
+                    if (task.getCreatedBy() != null &&
+                            !task.getCreatedBy().getId().equals(requesterId)) {
+                        notificationFacade.taskCompleted(
+                                task.getCreatedBy().getId(),
+                                task.getCreatedBy().getEmail(),
+                                task.getCreatedBy().getName(),
+                                task.getTitle(),
+                                task.getProject().getName(),
+                                requester.getName(),
+                                taskId);
+                    }
+                    // ── NEW: record TASK_COMPLETED activity ──────────────────
+                    activityService.record(taskId, projectId, requesterId,
+                            Action.TASK_COMPLETED, null, null, null);
+                }
+
+                task.setStatus(request.getStatus());
+            }
 
             // Handle assignee change
             if (request.getAssignedTo() != null) {
@@ -160,32 +224,55 @@ public class TaskService {
                     throw new BadRequestException("Assigned user is not a project member");
                 }
                 User admin = userRepository.findById(requesterId).orElseThrow();
+                // ── NEW: record assignee change ──────────────────────────────
+                activityService.record(taskId, projectId, requesterId,
+                        Action.ASSIGNED, "assignedTo",
+                        oldAssignee, newAssignee.getName());
                 task.setAssignedTo(newAssignee);
                 publishAssignmentEvent(task, newAssignee, admin, task.getProject());
             }
-        }
-        else {
+
+        } else {
 
             if (task.getAssignedTo() == null ||
                     !task.getAssignedTo().getId().equals(requesterId)) {
-                throw new ForbiddenException(
-                        "Members can only update their own assigned tasks");
+                throw new ForbiddenException("Members can only update their own assigned tasks");
             }
 
-            // Members may ONLY modify status
             if (request.getTitle() != null
                     || request.getDescription() != null
                     || request.getDueDate() != null
                     || request.getPriority() != null
                     || request.getAssignedTo() != null) {
-
-                throw new ForbiddenException(
-                        "Members can only update task status");
+                throw new ForbiddenException("Members can only update task status");
             }
 
             if (request.getStatus() == null) {
-                throw new BadRequestException(
-                        "Status is required");
+                throw new BadRequestException("Status is required");
+            }
+
+            // ── NEW: record status change for member ─────────────────────────
+            activityService.record(taskId, projectId, requesterId,
+                    Action.STATUS_CHANGED, "status",
+                    oldStatus.name(), request.getStatus().name());
+
+            // ── NEW: taskCompleted notification when member marks DONE ────────
+            if (request.getStatus() == Status.DONE && oldStatus != Status.DONE) {
+                User requester = userRepository.findById(requesterId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User", requesterId));
+                if (task.getCreatedBy() != null &&
+                        !task.getCreatedBy().getId().equals(requesterId)) {
+                    notificationFacade.taskCompleted(
+                            task.getCreatedBy().getId(),
+                            task.getCreatedBy().getEmail(),
+                            task.getCreatedBy().getName(),
+                            task.getTitle(),
+                            task.getProject().getName(),
+                            requester.getName(),
+                            taskId);
+                }
+                activityService.record(taskId, projectId, requesterId,
+                        Action.TASK_COMPLETED, null, null, null);
             }
 
             task.setStatus(request.getStatus());
@@ -196,17 +283,27 @@ public class TaskService {
         return toDTO(updated);
     }
 
+    // ── Delete ────────────────────────────────────────────────────────────────
+
     @Transactional
     @CacheEvict(value = "dashboard", allEntries = true)
     public void deleteTask(Long taskId, Long requesterId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task", taskId));
-        assertAdminRole(task.getProject().getId(), requesterId);
+
+        Long projectId = task.getProject().getId();
+        assertAdminRole(projectId, requesterId);
+
+        // ── NEW: record deletion before actually deleting ────────────────────
+        activityService.record(taskId, projectId, requesterId,
+                Action.TASK_DELETED, null, task.getTitle(), null);
+
         taskRepository.deleteById(taskId);
         log.info("Task {} deleted by user {}", taskId, requesterId);
     }
 
-    // ── overdue scheduler ────────────────────────────────────────────────────
+    // ── Overdue scheduler ─────────────────────────────────────────────────────
+
     @Transactional(readOnly = true)
     public void checkAndPublishOverdueTasks() {
         List<Task> overdue = taskRepository.findAllOverdueTasks(LocalDate.now());
@@ -226,8 +323,10 @@ public class TaskService {
         });
     }
 
-    // ── helpers ──────────────────────────────────────────────────────────────
-    private void publishAssignmentEvent(Task task, User assignee, User assignedBy, Project project) {
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private void publishAssignmentEvent(Task task, User assignee,
+                                        User assignedBy, Project project) {
         eventPublisher.publishTaskAssigned(TaskEvents.TaskAssignedEvent.builder()
                 .taskId(task.getId())
                 .taskTitle(task.getTitle())

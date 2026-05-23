@@ -21,6 +21,10 @@ export interface User {
   createdAt?: string;
 }
 
+export interface Profile extends User {
+  notificationPreferences?: Record<string, boolean>;
+}
+
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -65,11 +69,15 @@ export interface Task {
 export interface DashboardData {
   totalProjects: number;
   totalTasks: number;
+  todoTasks?: number;
+  inProgressTasks?: number;
   completedTasks: number;
   overdueTasks: number;
   taskStatusDistribution?: Record<TaskStatus, number>;
   priorityDistribution?: Record<TaskPriority, number>;
   recentTasks: Task[];
+  overdueTasksList?: Task[];
+  recentActivity?: ActivityLog[];
 }
 
 export interface LoginRequest {
@@ -108,4 +116,108 @@ export interface CreateTaskRequest {
 
 export interface UpdateTaskStatusRequest {
   status: TaskStatus;
+}
+
+export type NotificationType = 'NOTIFICATION' | 'TASK_ASSIGNED' | 'TASK_OVERDUE' | 'COMMENT_ADDED' | 'TASK_UPDATED' | 'TASK' | 'PROJECT' | 'COMMENT' | 'SYSTEM';
+
+export interface Notification {
+  id: ID;
+  title?: string;
+  message?: string;
+  type?: NotificationType;
+  read?: boolean;
+  createdAt?: string;
+  timestamp?: string;
+  referenceId?: ID;
+  projectId?: ID;
+  payload?: Record<string, unknown>;
+}
+
+export interface Comment {
+  id: ID;
+  taskId?: ID;
+  body?: string;
+  content?: string;
+  author?: User;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ActivityLog {
+  id: ID;
+  type?: string;
+  actor?: User;
+  actorName?: string;
+  summary?: string;
+  description?: string;
+  createdAt?: string;
+  timestamp?: string;
+  changes?: Record<string, unknown>;
+}
+
+export interface AuditLog {
+  id: ID;
+  actor?: string;
+  actorName?: string;
+  action?: string;
+  entity?: string;
+  entityType?: string;
+  entityId?: ID;
+  severity?: string;
+  createdAt?: string;
+  timestamp?: string;
+}
+
+export interface ProjectSettings {
+  id?: ID;
+  projectId?: ID;
+  archived?: boolean;
+  preferences?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface BoardTask extends Task {
+  columnId?: ID;
+  position?: number;
+}
+
+export interface BoardColumn {
+  id: ID;
+  name?: string;
+  title?: string;
+  position?: number;
+  tasks?: BoardTask[];
+}
+
+export interface Board {
+  columns: BoardColumn[];
+}
+
+export interface Attachment {
+  id: ID;
+  fileName?: string;
+  name?: string;
+  contentType?: string;
+  size?: number;
+  createdAt?: string;
+}
+
+export interface ProjectAnalytics {
+  totalTasks?: number;
+  overdue?: number;
+  completedThisWeek?: number;
+  completedThisMonth?: number;
+  completionRate?: number;
+  tasksByStatus?: Record<string, number>;
+  tasksByPriority?: Record<string, number>;
+  weeklyTrend?: Array<Record<string, string | number>>;
+  memberStats?: Array<Record<string, string | number>>;
+}
+
+export interface WebSocketEvent {
+  type: NotificationType;
+  referenceId: ID;
+  projectId?: ID;
+  payload: Record<string, unknown>;
+  timestamp: string;
 }

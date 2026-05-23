@@ -3,12 +3,16 @@ import AssignmentTurnedInOutlinedIcon from '@mui/icons-material/AssignmentTurned
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined';
+import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import type { ReactNode } from 'react';
 import { useGetDashboardQuery } from '../../api/dashboardApi';
 import { PageHeader } from '../../components/common/PageHeader';
 import { TaskStatusPieChart } from '../../components/charts/TaskStatusPieChart';
 import { PriorityBarChart } from '../../components/charts/PriorityBarChart';
 import { RecentTasksTable } from '../../components/tables/RecentTasksTable';
+import { ActivityItem } from '../../features/activity/ActivityItem';
+import { EmptyState } from '../../components/common/EmptyState';
 
 function MetricCard({
   label,
@@ -78,16 +82,22 @@ export function DashboardPage() {
         </Paper>
       ) : (
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
             <MetricCard label="Total Projects" value={data?.totalProjects} icon={<FolderOutlinedIcon />} tone="#2563eb" helper="Active project spaces" />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
             <MetricCard label="Total Tasks" value={data?.totalTasks} icon={<AssignmentTurnedInOutlinedIcon />} tone="#7c3aed" helper="Tracked work items" />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+            <MetricCard label="Todo Tasks" value={data?.todoTasks} icon={<PendingActionsOutlinedIcon />} tone="#64748b" helper="Ready to start" />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
+            <MetricCard label="In Progress Tasks" value={data?.inProgressTasks} icon={<SyncOutlinedIcon />} tone="#2563eb" helper="Currently moving" />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
             <MetricCard label="Completed Tasks" value={data?.completedTasks} icon={<TaskAltOutlinedIcon />} tone="#16a34a" helper="Done across teams" />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
             <MetricCard label="Overdue Tasks" value={data?.overdueTasks} icon={<WarningAmberOutlinedIcon />} tone="#dc2626" helper="Need attention" />
           </Grid>
           <Grid size={{ xs: 12, lg: 6 }}>
@@ -102,6 +112,21 @@ export function DashboardPage() {
           </Grid>
           <Grid size={12}>
             <RecentTasksTable tasks={data?.recentTasks ?? []} />
+          </Grid>
+          <Grid size={{ xs: 12, lg: 6 }}>
+            <RecentTasksTable tasks={data?.overdueTasksList ?? []} />
+          </Grid>
+          <Grid size={{ xs: 12, lg: 6 }}>
+            <Paper sx={{ p: 2.5 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Recent Activity
+              </Typography>
+              {data?.recentActivity?.length ? (
+                data.recentActivity.map((event, index) => <ActivityItem key={event.id} event={event} last={index === data.recentActivity!.length - 1} />)
+              ) : (
+                <EmptyState title="No activity" description="Recent workspace activity will appear here." />
+              )}
+            </Paper>
           </Grid>
         </Grid>
       )}

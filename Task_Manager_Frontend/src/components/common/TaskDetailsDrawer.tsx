@@ -4,7 +4,6 @@ import { formatDate } from '../../utils/format';
 import { PriorityChip, StatusChip } from './StatusChip';
 import { CommentList } from '../../features/comments/CommentList';
 import { ActivityTimeline } from '../../features/activity/ActivityTimeline';
-import { useAppSelector } from '../../hooks/redux';
 import { AttachmentList } from '../../features/attachments/AttachmentList';
 
 function Detail({ label, value }: { label: string; value?: React.ReactNode }) {
@@ -19,8 +18,6 @@ function Detail({ label, value }: { label: string; value?: React.ReactNode }) {
 }
 
 export function TaskDetailsDrawer({ task, open, onClose }: { task: Task | null; open: boolean; onClose: () => void }) {
-  const currentUser = useAppSelector((state) => state.auth.user);
-
   return (
     <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 560 }, p: 3 } }}>
       {task && (
@@ -39,9 +36,9 @@ export function TaskDetailsDrawer({ task, open, onClose }: { task: Task | null; 
           <Detail label="Created" value={formatDate(task.createdAt)} />
           <Detail label="Updated" value={formatDate(task.updatedAt)} />
           <Divider />
-          <AttachmentList />
+          <AttachmentList taskId={task.id} />
           <Divider />
-          <CommentList taskId={task.id} currentUser={currentUser} />
+          <CommentList taskId={task.id} />
           <Divider />
           <ActivityTimeline task={task} />
         </Stack>

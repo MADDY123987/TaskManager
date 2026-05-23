@@ -12,7 +12,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tasks")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Task {
 
     public enum Priority { LOW, MEDIUM, HIGH }
@@ -60,4 +64,13 @@ public class Task {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // ── Phase 3 additions ────────────────────────────────────────────────────
+
+    @Column(name = "kanban_column_id")
+    private Long kanbanColumnId;
+
+    @Column(name = "kanban_position", nullable = false)
+    @Builder.Default
+    private int kanbanPosition = 0;
 }

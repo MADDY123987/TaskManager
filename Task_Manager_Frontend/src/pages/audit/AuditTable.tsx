@@ -1,14 +1,6 @@
 import { Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import dayjs from 'dayjs';
-
-export interface AuditLog {
-  id: string;
-  actor: string;
-  action: string;
-  entity: string;
-  severity: 'INFO' | 'WARNING' | 'CRITICAL';
-  createdAt: string;
-}
+import type { AuditLog } from '../../types/api';
 
 export function AuditTable({ logs }: { logs: AuditLog[] }) {
   return (
@@ -26,13 +18,13 @@ export function AuditTable({ logs }: { logs: AuditLog[] }) {
         <TableBody>
           {logs.map((log) => (
             <TableRow key={log.id} hover>
-              <TableCell sx={{ fontWeight: 600 }}>{log.actor}</TableCell>
-              <TableCell>{log.action}</TableCell>
-              <TableCell>{log.entity}</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>{log.actor ?? log.actorName ?? 'System'}</TableCell>
+              <TableCell>{log.action ?? 'Activity'}</TableCell>
+              <TableCell>{log.entity ?? log.entityType ?? log.entityId ?? 'Entity'}</TableCell>
               <TableCell>
-                <Chip size="small" label={log.severity} color={log.severity === 'CRITICAL' ? 'error' : log.severity === 'WARNING' ? 'warning' : 'default'} />
+                <Chip size="small" label={log.severity ?? 'INFO'} color={log.severity === 'CRITICAL' ? 'error' : log.severity === 'WARNING' ? 'warning' : 'default'} />
               </TableCell>
-              <TableCell>{dayjs(log.createdAt).format('MMM D, YYYY h:mm A')}</TableCell>
+              <TableCell>{dayjs(log.createdAt ?? log.timestamp).format('MMM D, YYYY h:mm A')}</TableCell>
             </TableRow>
           ))}
         </TableBody>

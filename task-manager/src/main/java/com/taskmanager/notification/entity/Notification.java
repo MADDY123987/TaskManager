@@ -35,7 +35,10 @@ public class Notification {
     private Long userId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 60)
+    @Column(
+            nullable = false,
+            columnDefinition = "VARCHAR(60)"
+    )
     private Type type;
 
     @Column(nullable = false)
@@ -45,7 +48,11 @@ public class Notification {
     private String message;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "reference_type", length = 60)
+    @Column(
+            name = "reference_type",
+            nullable = true,
+            columnDefinition = "VARCHAR(60)"
+    )
     private ReferenceType referenceType;
 
     @Column(name = "reference_id")

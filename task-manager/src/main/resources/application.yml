@@ -152,3 +152,17 @@ logging:
     com.taskmanager: DEBUG
     org.springframework.security: INFO
     io.github.resilience4j: INFO
+
+aws:
+  s3:
+    bucket: taskmanager-files
+    region: ap-south-1
+
+    # leave blank for now
+    endpoint: ""
+
+    # leave blank if using AWS CLI credentials
+    access-key: ""
+    secret-key: ""
+
+    path-style-access-enabled: false

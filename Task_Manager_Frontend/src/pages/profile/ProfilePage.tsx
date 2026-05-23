@@ -4,12 +4,12 @@ import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useParams } from 'react-router-dom';
 import { z } from 'zod';
-import { useMeQuery } from '../../api/authApi';
 import { PageHeader } from '../../components/common/PageHeader';
 import { FormTextField } from '../../components/forms/FormTextField';
-import { useAppSelector } from '../../hooks/redux';
 import { useSnackbar } from '../../hooks/useSnackbar';
+import { useGetProfileByIdQuery, useGetProfileQuery, useUpdateAvatarMutation, useUpdateProfileMutation } from '../../api/profileApi';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -23,10 +23,14 @@ const profileSchema = z.object({
 type ProfileForm = z.infer<typeof profileSchema>;
 
 export function ProfilePage() {
-  const token = useAppSelector((state) => state.auth.token);
-  const cachedUser = useAppSelector((state) => state.auth.user);
-  const { data, isLoading } = useMeQuery(undefined, { skip: !token });
-  const user = data ?? cachedUser;
+  const { userId } = useParams();
+  const ownProfile = useGetProfileQuery(undefined, { skip: Boolean(userId) });
+  const otherProfile = useGetProfileByIdQuery(userId ?? '', { skip: !userId });
+  const [updateProfile, updateProfileState] = useUpdateProfileMutation();
+  const [updateAvatar, updateAvatarState] = useUpdateAvatarMutation();
+  const user = userId ? otherProfile.data : ownProfile.data;
+  const isLoading = userId ? otherProfile.isLoading : ownProfile.isLoading;
+  const isOwnProfile = !userId;
   const { notify } = useSnackbar();
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>();
   const { control, handleSubmit, reset } = useForm<ProfileForm>({
@@ -58,10 +62,21 @@ export function ProfilePage() {
   const onAvatarChange = (file?: File) => {
     if (!file) return;
     setAvatarPreview(URL.createObjectURL(file));
+    const data = new FormData();
+    data.append('avatar', file);
+    updateAvatar(data)
+      .unwrap()
+      .then(() => notify('Avatar updated'))
+      .catch(() => notify('Could not update avatar', 'error'));
   };
 
-  const onSubmit = handleSubmit(() => {
-    notify('Profile changes are ready to be sent when the profile API is available');
+  const onSubmit = handleSubmit(async (values) => {
+    try {
+      await updateProfile(values).unwrap();
+      notify('Profile updated');
+    } catch {
+      notify('Could not update profile', 'error');
+    }
   });
 
   return (
@@ -82,7 +97,7 @@ export function ProfilePage() {
                   <Typography color="text.secondary" sx={{ mb: 2 }}>
                     {user?.designation ?? user?.role ?? 'Team member'}
                   </Typography>
-                  <Button component="label" variant="outlined" startIcon={<CloudUploadOutlinedIcon />}>
+                  <Button component="label" variant="outlined" startIcon={<CloudUploadOutlinedIcon />} disabled={!isOwnProfile || updateAvatarState.isLoading}>
                     Upload avatar
                     <input hidden accept="image/*" type="file" onChange={(event) => onAvatarChange(event.target.files?.[0])} />
                   </Button>
@@ -99,26 +114,26 @@ export function ProfilePage() {
                   <Divider />
                   <Grid container spacing={2}>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <FormTextField<ProfileForm> name="name" control={control} label="Name" />
+                      <FormTextField<ProfileForm> name="name" control={control} label="Name" disabled={!isOwnProfile} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <FormTextField<ProfileForm> name="email" control={control} label="Email" type="email" />
+                      <FormTextField<ProfileForm> name="email" control={control} label="Email" type="email" disabled={!isOwnProfile} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <FormTextField<ProfileForm> name="phone" control={control} label="Phone" />
+                      <FormTextField<ProfileForm> name="phone" control={control} label="Phone" disabled={!isOwnProfile} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <FormTextField<ProfileForm> name="department" control={control} label="Department" />
+                      <FormTextField<ProfileForm> name="department" control={control} label="Department" disabled={!isOwnProfile} />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <FormTextField<ProfileForm> name="designation" control={control} label="Designation" />
+                      <FormTextField<ProfileForm> name="designation" control={control} label="Designation" disabled={!isOwnProfile} />
                     </Grid>
                     <Grid size={12}>
-                      <FormTextField<ProfileForm> name="bio" control={control} label="Bio" multiline minRows={4} />
+                      <FormTextField<ProfileForm> name="bio" control={control} label="Bio" multiline minRows={4} disabled={!isOwnProfile} />
                     </Grid>
                   </Grid>
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button type="submit" variant="contained" startIcon={<SaveOutlinedIcon />}>
+                    <Button type="submit" variant="contained" startIcon={<SaveOutlinedIcon />} loading={updateProfileState.isLoading} disabled={!isOwnProfile}>
                       Save profile
                     </Button>
                   </Box>

@@ -4,6 +4,11 @@ import { useEffect, type ReactNode } from 'react';
 import { dashboardApi } from '../../api/dashboardApi';
 import { projectApi } from '../../api/projectApi';
 import { taskApi } from '../../api/taskApi';
+import { notificationApi } from '../../api/notificationApi';
+import { commentApi } from '../../api/commentApi';
+import { activityApi } from '../../api/activityApi';
+import { kanbanApi } from '../../api/kanbanApi';
+import { analyticsApi } from '../../api/analyticsApi';
 import { addNotification } from '../../features/notifications/notificationSlice';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { useSnackbar } from '../../hooks/useSnackbar';
@@ -34,13 +39,18 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       onConnect: () => {
         client.subscribe('/user/queue/notifications', (message: IMessage) => {
           const payload = parsePayload(message.body);
-          const title = payload.title ?? 'New notification';
+          const title = payload.title ?? payload.type ?? 'New notification';
           const text = payload.message ?? 'Workspace activity received';
           dispatch(addNotification({ title, message: text, type: payload.type ?? 'SYSTEM', href: payload.href }));
           notify(text, 'info');
+          dispatch(notificationApi.util.invalidateTags(['Notification']));
           dispatch(taskApi.util.invalidateTags(['Task']));
           dispatch(projectApi.util.invalidateTags(['Project']));
           dispatch(dashboardApi.util.invalidateTags(['Dashboard']));
+          dispatch(commentApi.util.invalidateTags(['Comment']));
+          dispatch(activityApi.util.invalidateTags(['Activity']));
+          dispatch(kanbanApi.util.invalidateTags(['Board']));
+          dispatch(analyticsApi.util.invalidateTags(['Analytics']));
         });
       },
     });

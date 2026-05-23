@@ -8,10 +8,11 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @Repository
 public interface TaskRepository extends JpaRepository<Task, Long> {
+
+    // ── Existing queries (unchanged) ─────────────────────────────────────────
 
     List<Task> findAllByProjectId(Long projectId);
 
@@ -72,8 +73,64 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
         ORDER BY t.dueDate ASC
         """)
     List<Task> findOverdueTasksForUser(@Param("userId") Long userId,
-                                        @Param("today") LocalDate today);
+                                       @Param("today") LocalDate today);
 
     @Query("SELECT t FROM Task t WHERE t.dueDate < :today AND t.status != 'DONE'")
     List<Task> findAllOverdueTasks(@Param("today") LocalDate today);
+
+    // ── Kanban additions (Phase 3) ────────────────────────────────────────────
+
+    List<Task> findByKanbanColumnId(Long kanbanColumnId);
+
+    @Query("SELECT t FROM Task t WHERE t.project.id = :projectId " +
+            "ORDER BY t.kanbanPosition ASC")
+    List<Task> findByProjectIdOrderByKanbanPosition(@Param("projectId") Long projectId);
+
+    // ── Analytics additions (Phase 3) ─────────────────────────────────────────
+
+    @Query("SELECT t.status, COUNT(t) FROM Task t " +
+            "WHERE t.project.id = :projectId GROUP BY t.status")
+    List<Object[]> countTasksByStatusForProject(@Param("projectId") Long projectId);
+
+    @Query("SELECT t.priority, COUNT(t) FROM Task t " +
+            "WHERE t.project.id = :projectId GROUP BY t.priority")
+    List<Object[]> countTasksByPriorityForProject(@Param("projectId") Long projectId);
+
+    @Query("SELECT COUNT(t) FROM Task t " +
+            "WHERE t.project.id = :projectId " +
+            "AND t.dueDate < :today AND t.status <> 'DONE'")
+    long countOverdueTasksForProject(@Param("projectId") Long projectId,
+                                     @Param("today") LocalDate today);
+
+    @Query("SELECT COUNT(t) FROM Task t " +
+            "WHERE t.project.id = :projectId " +
+            "AND t.status = 'DONE' AND t.updatedAt >= :since")
+    long countCompletedSince(@Param("projectId") Long projectId,
+                             @Param("since") LocalDate since);
+
+    @Query("SELECT COUNT(t) FROM Task t " +
+            "WHERE t.project.id = :projectId " +
+            "AND t.status = 'DONE' " +
+            "AND t.updatedAt >= :from AND t.updatedAt <= :to")
+    long countCompletedBetween(@Param("projectId") Long projectId,
+                               @Param("from") LocalDate from,
+                               @Param("to") LocalDate to);
+
+    @Query("SELECT COUNT(t) FROM Task t " +
+            "WHERE t.project.id = :projectId " +
+            "AND t.createdAt >= :from AND t.createdAt <= :to")
+    long countCreatedBetween(@Param("projectId") Long projectId,
+                             @Param("from") LocalDate from,
+                             @Param("to") LocalDate to);
+
+    @Query("""
+           SELECT u.id, u.name,
+                  COUNT(t),
+                  SUM(CASE WHEN t.status = 'DONE' THEN 1 ELSE 0 END)
+           FROM Task t
+           JOIN t.assignedTo u
+           WHERE t.project.id = :projectId
+           GROUP BY u.id, u.name
+           """)
+    List<Object[]> countTasksByAssigneeForProject(@Param("projectId") Long projectId);
 }

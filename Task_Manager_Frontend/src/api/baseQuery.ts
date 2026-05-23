@@ -17,12 +17,16 @@ export const axiosBaseQuery =
   async ({ url, method = 'GET', data, params }, api) => {
     try {
       const token = getStoredToken();
+      const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
       const result = await axiosClient.request<ApiResponse<unknown>>({
         url,
         method,
         data,
         params,
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(isFormData ? { 'Content-Type': 'multipart/form-data' } : {}),
+        },
       });
 
       return { data: result.data.data ?? result.data };

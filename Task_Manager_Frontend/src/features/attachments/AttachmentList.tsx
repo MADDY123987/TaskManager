@@ -1,67 +1,68 @@
-import { Box, Button, Chip, IconButton, List, ListItem, ListItemText, Paper, Stack, Typography } from '@mui/material';
+import { Button, Chip, IconButton, List, ListItem, ListItemText, Stack, Typography } from '@mui/material';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
-import { useMemo, useState } from 'react';
-
-interface Attachment {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  url: string;
-}
+import { useDeleteTaskAttachmentMutation, useGetTaskAttachmentsQuery, useLazyGetAttachmentDownloadUrlQuery, useUploadTaskAttachmentMutation } from '../../api/attachmentApi';
+import type { ID } from '../../types/api';
+import { useSnackbar } from '../../hooks/useSnackbar';
 
 const allowedTypes = ['image/png', 'image/jpeg', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
 
-export function AttachmentList() {
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const preview = useMemo(() => attachments.find((attachment) => attachment.type.startsWith('image/')), [attachments]);
+export function AttachmentList({ taskId }: { taskId: ID }) {
+  const { data: attachments = [], isLoading } = useGetTaskAttachmentsQuery(taskId);
+  const [uploadAttachment, uploadState] = useUploadTaskAttachmentMutation();
+  const [deleteAttachment] = useDeleteTaskAttachmentMutation();
+  const [getDownloadUrl] = useLazyGetAttachmentDownloadUrlQuery();
+  const { notify } = useSnackbar();
 
-  const addFiles = (files?: FileList | null) => {
+  const addFiles = async (files?: FileList | null) => {
     if (!files) return;
-    const next = Array.from(files)
-      .filter((file) => allowedTypes.includes(file.type))
-      .map((file) => ({ id: crypto.randomUUID(), name: file.name, type: file.type, size: file.size, url: URL.createObjectURL(file) }));
-    setAttachments((current) => [...next, ...current]);
+    for (const file of Array.from(files).filter((candidate) => allowedTypes.includes(candidate.type))) {
+      const data = new FormData();
+      data.append('file', file);
+      await uploadAttachment({ taskId, data }).unwrap();
+    }
+    notify('Attachment uploaded');
+  };
+
+  const download = async (attachmentId: ID) => {
+    const response = await getDownloadUrl({ taskId, attachmentId }).unwrap();
+    const url = response.downloadUrl ?? response.url;
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
     <Stack spacing={1.5}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="h6">Attachments</Typography>
-        <Button component="label" size="small" variant="outlined" startIcon={<UploadFileOutlinedIcon />}>
+        <Button component="label" size="small" variant="outlined" startIcon={<UploadFileOutlinedIcon />} loading={uploadState.isLoading}>
           Upload
           <input hidden multiple type="file" accept="image/*,.pdf,.docx" onChange={(event) => addFiles(event.target.files)} />
         </Button>
       </Stack>
-      {preview && (
-        <Paper variant="outlined" sx={{ p: 1 }}>
-          <Box component="img" src={preview.url} alt={preview.name} sx={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 1 }} />
-        </Paper>
-      )}
+      {isLoading && <Typography color="text.secondary">Loading attachments...</Typography>}
       <List dense disablePadding>
         {attachments.map((attachment) => (
           <ListItem
             key={attachment.id}
             secondaryAction={
               <Stack direction="row" spacing={0.5}>
-                <IconButton component="a" href={attachment.url} download={attachment.name} aria-label="Download attachment">
+                <IconButton onClick={() => download(attachment.id)} aria-label="Download attachment">
                   <DownloadOutlinedIcon />
                 </IconButton>
-                <IconButton onClick={() => setAttachments((current) => current.filter((item) => item.id !== attachment.id))} aria-label="Delete attachment">
+                <IconButton onClick={() => deleteAttachment({ taskId, attachmentId: attachment.id })} aria-label="Delete attachment">
                   <DeleteOutlineOutlinedIcon />
                 </IconButton>
               </Stack>
             }
             sx={{ border: 1, borderColor: 'divider', borderRadius: 1, mb: 1 }}
           >
-            <ListItemText primary={attachment.name} secondary={`${Math.round(attachment.size / 1024)} KB`} />
-            <Chip size="small" label={attachment.type.includes('pdf') ? 'PDF' : attachment.type.includes('word') ? 'DOCX' : 'Image'} sx={{ mr: 7 }} />
+            <ListItemText primary={attachment.fileName ?? attachment.name ?? 'Attachment'} secondary={attachment.size ? `${Math.round(attachment.size / 1024)} KB` : 'File'} />
+            <Chip size="small" label={attachment.contentType?.includes('pdf') ? 'PDF' : attachment.contentType?.includes('word') ? 'DOCX' : 'File'} sx={{ mr: 7 }} />
           </ListItem>
         ))}
       </List>
-      {!attachments.length && (
+      {!isLoading && !attachments.length && (
         <Typography color="text.secondary" variant="body2">
           No files attached yet. Images, PDFs, and DOCX files are supported.
         </Typography>

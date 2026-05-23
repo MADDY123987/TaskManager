@@ -1,42 +1,40 @@
 import { Stack, Typography } from '@mui/material';
-import { useMemo, useState } from 'react';
-import type { ID, User } from '../../types/api';
+import type { ID } from '../../types/api';
 import { EmptyState } from '../../components/common/EmptyState';
+import { useAddTaskCommentMutation, useDeleteTaskCommentMutation, useGetTaskCommentsQuery, useUpdateTaskCommentMutation } from '../../api/commentApi';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { AddCommentForm } from './AddCommentForm';
 import { CommentCard } from './CommentCard';
-import type { TaskComment } from './types';
 
-export function CommentList({ taskId, currentUser }: { taskId: ID; currentUser: User | null }) {
-  const [comments, setComments] = useState<TaskComment[]>([]);
-  const author = useMemo(
-    () => currentUser ?? { id: 'me', name: 'You', email: 'you@example.com' },
-    [currentUser],
-  );
+export function CommentList({ taskId }: { taskId: ID }) {
+  const { data: comments = [], isLoading } = useGetTaskCommentsQuery(taskId);
+  const [addComment] = useAddTaskCommentMutation();
+  const [updateComment] = useUpdateTaskCommentMutation();
+  const [deleteComment] = useDeleteTaskCommentMutation();
+  const { notify } = useSnackbar();
 
-  const addComment = (body: string) => {
-    setComments((current) => [
-      {
-        id: crypto.randomUUID(),
-        taskId,
-        body,
-        author,
-        createdAt: new Date().toISOString(),
-      },
-      ...current,
-    ]);
+  const handleAdd = async (content: string) => {
+    try {
+      await addComment({ taskId, data: { content } }).unwrap();
+      notify('Comment added');
+    } catch {
+      notify('Could not add comment', 'error');
+    }
   };
 
   return (
     <Stack spacing={1.5}>
       <Typography variant="h6">Comments</Typography>
-      <AddCommentForm onAdd={addComment} />
-      {comments.length ? (
+      <AddCommentForm onAdd={handleAdd} />
+      {isLoading ? (
+        <Typography color="text.secondary">Loading comments...</Typography>
+      ) : comments.length ? (
         comments.map((comment) => (
           <CommentCard
             key={comment.id}
             comment={comment}
-            onEdit={(id, body) => setComments((current) => current.map((item) => (item.id === id ? { ...item, body, updatedAt: new Date().toISOString() } : item)))}
-            onDelete={(id) => setComments((current) => current.filter((item) => item.id !== id))}
+            onEdit={(commentId, content) => updateComment({ taskId, commentId, data: { content } })}
+            onDelete={(commentId) => deleteComment({ taskId, commentId })}
           />
         ))
       ) : (
