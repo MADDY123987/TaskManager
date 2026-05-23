@@ -22,7 +22,20 @@
     <java.version>21</java.version>
     <resilience4j.version>2.2.0</resilience4j.version>
     <jjwt.version>0.12.5</jjwt.version>
+    <aws.sdk.version>2.25.28</aws.sdk.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>bom</artifactId>
+        <version>${aws.sdk.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!-- Web -->
@@ -173,6 +186,17 @@
       <artifactId>micrometer-core</artifactId>
     </dependency>
 
+
+    <!--AWS-->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>s3</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>regions</artifactId>
+    </dependency>
     <!-- Test -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
