@@ -85,7 +85,7 @@ export function DashboardPage() {
       ) : isError ? (
         <Paper sx={{ p: 4 }}>
           <Typography variant="h6">Dashboard could not be loaded</Typography>
-          <Typography color="text.secondary">Check that the backend is running at http://localhost:8080.</Typography>
+          <Typography color="text.secondary">Check that the backend URL is configured and reachable.</Typography>
         </Paper>
       ) : (
         <Grid container spacing={2}>

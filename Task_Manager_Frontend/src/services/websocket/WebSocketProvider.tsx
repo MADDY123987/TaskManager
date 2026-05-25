@@ -8,6 +8,7 @@ import { commentApi } from '../../api/commentApi';
 import { activityApi } from '../../api/activityApi';
 import { kanbanApi } from '../../api/kanbanApi';
 import { analyticsApi } from '../../api/analyticsApi';
+import { API_BASE_URL } from '../../api/axiosClient';
 import { addNotification } from '../../features/notifications/notificationSlice';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { useSnackbar } from '../../hooks/useSnackbar';
@@ -19,7 +20,7 @@ interface RealtimePayload {
   href?: string;
 }
 
-const wsUrl = normalizeSockJsUrl(import.meta.env.VITE_WS_URL ?? 'http://localhost:8080/ws');
+const wsUrl = normalizeSockJsUrl(`${API_BASE_URL}/ws`);
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
   const token = useAppSelector((state) => state.auth.token);
@@ -75,7 +76,10 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
 }
 
 function normalizeSockJsUrl(url: string) {
-  return url.replace(/^ws:\/\//, 'http://').replace(/^wss:\/\//, 'https://');
+  const endpoint = new URL(url);
+  if (endpoint.protocol === 'ws:') endpoint.protocol = 'http:';
+  if (endpoint.protocol === 'wss:') endpoint.protocol = 'https:';
+  return endpoint.toString();
 }
 
 function parsePayload(body: string): RealtimePayload {

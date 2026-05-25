@@ -447,7 +447,7 @@ catch (err) {
     mail:
       from: noreply@taskmanager.com
     frontend:
-      url: http://localhost:3000
+      url: your-frontend-url
   ```
 
 **Note 2: JWT Secret**
@@ -455,7 +455,7 @@ catch (err) {
 - Change from default before deploying to production
 
 **Note 3: CORS**
-- Frontend and backend should allow requests (already configured in SecurityConfig)
+- Frontend and backend origins must be configured explicitly for the deployed environments
 
 **Note 4: Testing Email Templates**
 - In development without SMTP, check logs for template rendering
@@ -483,7 +483,7 @@ catch (err) {
 3. **Error messages**: No sensitive information in error responses
 4. **401 handling**: Proper HTTP status codes instead of exceptions
 5. **CSRF protection**: Already enabled in SecurityConfig
-6. **CORS restrictions**: Properly configured with allowed origins
+6. **CORS restrictions**: Configure allowed origins for each deployed frontend environment
 7. **Password encryption**: BCryptPasswordEncoder with strength 12
 
 ---

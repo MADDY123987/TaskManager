@@ -1,7 +1,16 @@
 import axios from 'axios';
 import { getStoredToken, tokenStorage } from '../utils/storage';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
+function getApiBaseUrl() {
+  const apiUrl = import.meta.env.VITE_API_URL?.trim();
+  if (!apiUrl) {
+    throw new Error('VITE_API_URL is required. Set it to the deployed backend base URL.');
+  }
+
+  return apiUrl.replace(/\/+$/, '');
+}
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export const axiosClient = axios.create({
   baseURL: API_BASE_URL,
