@@ -24,6 +24,26 @@ A production-ready collaborative task management backend built with **Spring Boo
 
 ---
 
+## 🌐 Live Deployment
+
+### Frontend (Vercel)
+
+https://task-manager-murex-alpha.vercel.app
+
+### Backend API (Render)
+
+https://taskmanager-api-5586.onrender.com
+
+### API Documentation
+
+https://taskmanager-api-5586.onrender.com/swagger-ui/index.html
+
+### Health Check
+
+https://taskmanager-api-5586.onrender.com/actuator/health
+
+---
+
 ## ✨ Features
 
 - **OTP-based Registration** — email verified before account creation
