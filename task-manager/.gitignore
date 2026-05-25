@@ -21,3 +21,13 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Maven Wrapper cache
+.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ
+out/
+
+# Mac
+.AppleDouble
+.LSOverride

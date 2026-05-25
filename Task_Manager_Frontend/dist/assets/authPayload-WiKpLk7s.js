@@ -1,0 +1,1 @@
+function t(e){const n=e.token??e.accessToken??e.jwt??e.bearerToken,r=e.user??{id:e.userId??e.id??e.email??"me",name:e.name??e.email??"User",email:e.email??"",role:e.role};if(!n)throw new Error("Authentication response did not include a token");return{token:n,user:r}}export{t as n};

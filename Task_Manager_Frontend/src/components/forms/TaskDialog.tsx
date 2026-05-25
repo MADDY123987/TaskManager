@@ -4,23 +4,23 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { FormTextField } from './FormTextField';
-import type { Task, TaskPriority } from '../../types/api';
+import type { ProjectMember, Task, TaskPriority } from '../../types/api';
 
 const schema = z.object({
   title: z.string().min(2, 'Title is required'),
   description: z.string().optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
   dueDate: z.string().optional(),
-  assignedTo: z.string().optional(),
+  assignedTo: z.coerce.number().positive('Select an assignee').optional().or(z.literal('')),
 });
 
 export type TaskForm = z.infer<typeof schema>;
 
 const assigneeValue = (task?: Task | null) => {
   const assigned = task?.assignedTo;
-  if (typeof assigned === 'object' && assigned && 'id' in assigned) return String(assigned.id);
-  if (assigned) return String(assigned);
-  return task?.assignee?.id ? String(task.assignee.id) : '';
+  if (typeof assigned === 'object' && assigned && 'id' in assigned) return Number(assigned.id);
+  if (assigned) return Number(assigned);
+  return task?.assignee?.id ? Number(task.assignee.id) : '';
 };
 
 export function TaskDialog({
@@ -29,12 +29,14 @@ export function TaskDialog({
   loading,
   onClose,
   onSubmit,
+  assignees = [],
 }: {
   open: boolean;
   task?: Task | null;
   loading?: boolean;
   onClose: () => void;
   onSubmit: (values: TaskForm) => void;
+  assignees?: ProjectMember[];
 }) {
   const { control, handleSubmit, reset } = useForm<TaskForm>({
     resolver: zodResolver(schema),
@@ -64,7 +66,18 @@ export function TaskDialog({
             <MenuItem value="HIGH">High</MenuItem>
           </FormTextField>
           <FormTextField<TaskForm> name="dueDate" control={control} label="Due date" type="date" InputLabelProps={{ shrink: true }} />
-          <FormTextField<TaskForm> name="assignedTo" control={control} label="Assigned to user id" />
+          <FormTextField<TaskForm> name="assignedTo" control={control} label="Assignee" select>
+            <MenuItem value="">Unassigned</MenuItem>
+            {assignees.map((member) => {
+              const userId = member.userId ?? member.id;
+              if (userId === undefined) return null;
+              return (
+                <MenuItem key={String(userId)} value={Number(userId)}>
+                  {member.name} {member.email ? `(${member.email})` : ''}
+                </MenuItem>
+              );
+            })}
+          </FormTextField>
         </Stack>
       </DialogContent>
       <DialogActions>

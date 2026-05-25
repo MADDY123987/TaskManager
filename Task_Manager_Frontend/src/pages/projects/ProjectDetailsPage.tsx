@@ -60,10 +60,15 @@ export function ProjectDetailsPage() {
   };
 
   const saveTask = async (values: TaskForm) => {
-    const data = { ...values, assignedTo: values.assignedTo || null, dueDate: values.dueDate || null };
+    const payload = {
+      ...values,
+      assignedTo: values.assignedTo === '' || values.assignedTo === undefined ? null : Number(values.assignedTo),
+      dueDate: values.dueDate || null,
+    };
+    console.log('createTask payload', payload);
     try {
-      if (taskDialog) await updateTask({ taskId: taskDialog.id, data }).unwrap();
-      else await createTask({ projectId, data }).unwrap();
+      if (taskDialog) await updateTask({ taskId: taskDialog.id, data: payload }).unwrap();
+      else await createTask({ projectId, data: payload }).unwrap();
       setTaskDialog(undefined);
       notify('Task saved');
     } catch {
@@ -133,7 +138,7 @@ export function ProjectDetailsPage() {
       {tab === 4 && <ProjectSettingsPanel project={project} />}
       <ProjectDialog open={projectDialog} project={project} loading={updateProjectState.isLoading} onClose={() => setProjectDialog(false)} onSubmit={saveProject} />
       <AddMemberDialog open={memberDialog} loading={addMemberState.isLoading} onClose={() => setMemberDialog(false)} onSubmit={saveMember} />
-      <TaskDialog open={taskDialog !== undefined} task={taskDialog} loading={createTaskState.isLoading || updateTaskState.isLoading} onClose={() => setTaskDialog(undefined)} onSubmit={saveTask} />
+      <TaskDialog open={taskDialog !== undefined} task={taskDialog} assignees={members} loading={createTaskState.isLoading || updateTaskState.isLoading} onClose={() => setTaskDialog(undefined)} onSubmit={saveTask} />
       <TaskDetailsDrawer open={Boolean(viewTask)} task={viewTask} onClose={() => setViewTask(null)} />
       <ConfirmDialog open={Boolean(deleteTaskTarget)} title="Delete task?" description="This task will be permanently removed." loading={deleteTaskState.isLoading} onClose={() => setDeleteTaskTarget(null)} onConfirm={confirmDeleteTask} />
     </>

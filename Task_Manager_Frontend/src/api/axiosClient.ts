@@ -22,8 +22,14 @@ axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.warn('Received 401 Unauthorized - clearing stored token and triggering logout');
       tokenStorage.clear();
+      // Dispatch logout event so auth context can update
       window.dispatchEvent(new Event('auth:logout'));
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   },

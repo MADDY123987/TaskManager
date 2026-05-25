@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.time.LocalDate;
 
@@ -156,7 +155,7 @@ public class EmailService {
             helper.setText(htmlBody, true);
             mailSender.send(msg);
             log.info("Email sent to {} — subject: {}", to, subject);
-        } catch (MessagingException ex) {
+        } catch (Exception ex) {
             log.error("Failed to send email to {}: {}", to, ex.getMessage());
         }
     }
@@ -165,8 +164,54 @@ public class EmailService {
         try {
             return templateEngine.process(template, ctx);
         } catch (Exception ex) {
-            log.warn("Template '{}' not found, using plain-text fallback", template);
-            return "<pre>" + plainFallback + "</pre>";
+            log.warn("Template '{}' failed to render, using plain-text fallback: {}", template, ex.getMessage());
+            // Return as HTML-wrapped plain text to match expected format
+            return "<pre style=\"font-family: Arial, sans-serif; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;\">" 
+                   + plainFallback + "</pre>";
         }
+    }
+
+    // ── OTP emails ───────────────────────────────────────────────────────────
+
+    @Async
+    public void sendRegistrationOtp(String toEmail, String otp) {
+        Context ctx = new Context();
+        ctx.setVariable("otp", otp);
+        ctx.setVariable("appName", "Team Task Manager");
+
+        send(toEmail,
+                "Verify your email - Task Manager",
+                renderOrFallback("email/registration-otp", ctx,
+                        String.format("""
+                            Hi there!
+                            
+                            Your email verification code is: %s
+                            
+                            This code expires in 10 minutes.
+                            Do not share this with anyone.
+                            
+                            - Task Manager Team
+                            """, otp)));
+    }
+
+    @Async
+    public void sendPasswordResetOtp(String toEmail, String otp) {
+        Context ctx = new Context();
+        ctx.setVariable("otp", otp);
+        ctx.setVariable("appName", "Team Task Manager");
+
+        send(toEmail,
+                "Password Reset OTP - Task Manager",
+                renderOrFallback("email/password-reset-otp", ctx,
+                        String.format("""
+                            Hi,
+                            
+                            Your password reset code is: %s
+                            
+                            This code expires in 10 minutes.
+                            If you didn't request this, ignore this email.
+                            
+                            - Task Manager Team
+                            """, otp)));
     }
 }

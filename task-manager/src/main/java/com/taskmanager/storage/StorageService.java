@@ -31,8 +31,8 @@ import java.util.UUID;
  *       region: us-east-1
  *       # For MinIO:
  *       endpoint: http://localhost:9000
- *       access-key: minioadmin
- *       secret-key: minioadmin
+ *       access-key: ${AWS_ACCESS_KEY_ID}
+ *       secret-key: ${AWS_SECRET_ACCESS_KEY}
  */
 @Service
 @Slf4j

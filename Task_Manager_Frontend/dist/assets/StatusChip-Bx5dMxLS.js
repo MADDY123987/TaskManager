@@ -1,0 +1,1 @@
+import{_ as o,C as r}from"./index-ZGSsa6Tz.js";import{b as i,s as l,a as s,p as t}from"./format-C3DRornN.js";function p({status:a}){return o.jsx(r,{size:"small",label:i[a],color:l(a),variant:a==="TODO"?"outlined":"filled"})}function u({priority:a}){return o.jsx(r,{size:"small",label:s[a],color:t(a),variant:"outlined"})}export{u as P,p as S};

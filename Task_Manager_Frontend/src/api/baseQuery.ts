@@ -33,8 +33,17 @@ export const axiosBaseQuery =
     } catch (axiosError) {
       const error = axiosError as AxiosError<ApiResponse<unknown>>;
       if (error.response?.status === 401) {
+        console.warn('401 Unauthorized in baseQuery - clearing credentials');
         tokenStorage.clear();
         api.dispatch(clearCredentials());
+        // Don't retry - return error immediately
+        return {
+          error: {
+            status: 401,
+            data: error.response?.data,
+            message: error.response?.data?.message ?? 'Unauthorized. Please log in again.',
+          },
+        };
       }
       return {
         error: {

@@ -8,6 +8,7 @@ import { LazyPage } from './LazyPage';
 
 const LoginPage = lazy(() => import('../pages/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
 const SignupPage = lazy(() => import('../pages/auth/SignupPage').then((module) => ({ default: module.SignupPage })));
+const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage').then((module) => ({ default: module.ForgotPasswordPage })));
 const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage })));
 const ProjectsListPage = lazy(() => import('../pages/projects/ProjectsListPage').then((module) => ({ default: module.ProjectsListPage })));
 const ProjectDetailsPage = lazy(() => import('../pages/projects/ProjectDetailsPage').then((module) => ({ default: module.ProjectDetailsPage })));
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
     children: [
       { path: '/login', element: <LazyPage><LoginPage /></LazyPage> },
       { path: '/signup', element: <LazyPage><SignupPage /></LazyPage> },
+      { path: '/forgot-password', element: <LazyPage><ForgotPasswordPage /></LazyPage> },
     ],
   },
   {

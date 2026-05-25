@@ -13,6 +13,7 @@ import { PriorityBarChart } from '../../components/charts/PriorityBarChart';
 import { RecentTasksTable } from '../../components/tables/RecentTasksTable';
 import { ActivityItem } from '../../features/activity/ActivityItem';
 import { EmptyState } from '../../components/common/EmptyState';
+import { toCount, type CountLike } from '../../utils/count';
 
 function MetricCard({
   label,
@@ -22,11 +23,13 @@ function MetricCard({
   helper,
 }: {
   label: string;
-  value?: number;
+  value?: CountLike;
   icon: ReactNode;
   tone: string;
   helper: string;
 }) {
+  const metricValue = toCount(value);
+
   return (
     <Paper
       sx={{
@@ -44,7 +47,7 @@ function MetricCard({
             {label}
           </Typography>
           <Typography variant="h4" sx={{ mt: 0.5, fontSize: 34 }}>
-            {value ?? 0}
+            {metricValue}
           </Typography>
         </Box>
         <Box sx={{ width: 46, height: 46, display: 'grid', placeItems: 'center', borderRadius: 2, bgcolor: alpha(tone, 0.1), color: tone }}>
@@ -52,7 +55,7 @@ function MetricCard({
         </Box>
       </Box>
       <Box>
-        <LinearProgress variant="determinate" value={Math.min((value ?? 0) * 8, 100)} sx={{ height: 6, borderRadius: 99, bgcolor: alpha(tone, 0.1), '& .MuiLinearProgress-bar': { bgcolor: tone } }} />
+        <LinearProgress variant="determinate" value={Math.min(metricValue * 8, 100)} sx={{ height: 6, borderRadius: 99, bgcolor: alpha(tone, 0.1), '& .MuiLinearProgress-bar': { bgcolor: tone } }} />
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
           {helper}
         </Typography>
@@ -63,6 +66,10 @@ function MetricCard({
 
 export function DashboardPage() {
   const { data, isLoading, isError } = useGetDashboardQuery();
+
+  if (import.meta.env.DEV) {
+    console.log('dashboard', data);
+  }
 
   return (
     <>

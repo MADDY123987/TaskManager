@@ -3,15 +3,18 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { NotificationCard } from './NotificationCard';
 import { useGetNotificationsQuery, useMarkNotificationReadMutation } from '../../api/notificationApi';
 import { useState } from 'react';
+import type { Notification, PageResponse } from '../../types/api';
 
 export function NotificationList() {
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const { data: notifications = [], isLoading } = useGetNotificationsQuery();
   const [markRead] = useMarkNotificationReadMutation();
+  console.log('notifications response', notifications);
+  const items = getNotificationItems(notifications);
   const start = (page - 1) * pageSize;
-  const visible = notifications.slice(start, start + pageSize);
-  const pages = Math.max(Math.ceil(notifications.length / pageSize), 1);
+  const visible = items.slice(start, start + pageSize);
+  const pages = Math.max(Math.ceil(items.length / pageSize), 1);
 
   if (isLoading) {
     return (
@@ -23,7 +26,7 @@ export function NotificationList() {
     );
   }
 
-  if (!notifications.length) {
+  if (!items.length) {
     return <EmptyState title="No notifications" description="New activity and mentions will appear here." />;
   }
 
@@ -37,4 +40,9 @@ export function NotificationList() {
       </Box>
     </Stack>
   );
+}
+
+function getNotificationItems(response: PageResponse<Notification> | Notification[]) {
+  if (Array.isArray(response)) return response;
+  return response.content ?? [];
 }

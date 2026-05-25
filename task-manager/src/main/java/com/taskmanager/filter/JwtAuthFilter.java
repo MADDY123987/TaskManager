@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -34,18 +35,33 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String jwt = extractJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && jwtUtil.validateToken(jwt)) {
-                Long userId = jwtUtil.getUserIdFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserById(userId);
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                try {
+                    Long userId = jwtUtil.getUserIdFromToken(jwt);
+                    if (userId == null || userId <= 0) {
+                        log.warn("Invalid user ID in JWT token");
+                        SecurityContextHolder.clearContext();
+                    } else {
+                        UserDetails userDetails = userDetailsService.loadUserById(userId);
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails, null, userDetails.getAuthorities());
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                } catch (UsernameNotFoundException ex) {
+                    log.warn("User not found with id from JWT: {}", ex.getMessage());
+                    SecurityContextHolder.clearContext();
+                } catch (Exception ex) {
+                    log.warn("Error loading user from JWT: {}", ex.getMessage());
+                    SecurityContextHolder.clearContext();
+                }
+            } else if (StringUtils.hasText(jwt)) {
+                log.debug("JWT validation failed, clearing security context");
+                SecurityContextHolder.clearContext();
             }
         } catch (Exception ex) {
-            log.error("Could not set user authentication in security context: {}", ex.getMessage());
+            log.error("Unexpected error in JWT filter: {}", ex.getMessage(), ex);
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

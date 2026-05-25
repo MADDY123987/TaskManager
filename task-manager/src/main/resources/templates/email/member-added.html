@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .content {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #9b59b6;
+            font-size: 24px;
+            margin-top: 0;
+        }
+        .project-box {
+            background-color: #f4ecf7;
+            border-left: 4px solid #9b59b6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .project-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+        .project-detail {
+            color: #7f8c8d;
+            margin: 5px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #9b59b6;
+            color: #fff;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="content">
+        <h1>Welcome to the Team!</h1>
+        <p>Hi <span th:text="${recipientName}">User</span>,</p>
+        <p><strong th:text="${addedByName}">Someone</strong> has added you to a project as <strong th:text="${role}">member</strong>:</p>
+        
+        <div class="project-box">
+            <div class="project-name" th:text="${projectName}">Project Name</div>
+            <div class="project-detail">👤 Added by: <span th:text="${addedByName}">Team Lead</span></div>
+            <div class="project-detail">🔐 Role: <span th:text="${role}">Member</span></div>
+        </div>
+        
+        <p>You now have access to all project tasks, discussions, and resources. Start collaborating with your team!</p>
+        
+        <a th:href="${projectUrl}" class="button">View Project</a>
+        
+        <p>Best regards,<br/>
+        The <span th:text="${appName}">Team Task Manager</span> Team</p>
+        
+        <div class="footer">
+            <p>This is an automated notification. Please do not reply to this address.</p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

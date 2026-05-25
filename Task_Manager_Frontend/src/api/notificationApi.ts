@@ -1,13 +1,14 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery } from './baseQuery';
-import type { ID, Notification } from '../types/api';
+import type { ID, Notification, PageResponse } from '../types/api';
+import type { CountLike } from '../utils/count';
 
 export const notificationApi = createApi({
   reducerPath: 'notificationApi',
   baseQuery: axiosBaseQuery(),
   tagTypes: ['Notification'],
   endpoints: (builder) => ({
-    getNotifications: builder.query<Notification[], void>({
+    getNotifications: builder.query<PageResponse<Notification> | Notification[], void>({
       query: () => ({ url: '/api/notifications' }),
       providesTags: [{ type: 'Notification', id: 'LIST' }],
     }),
@@ -15,7 +16,7 @@ export const notificationApi = createApi({
       query: () => ({ url: '/api/notifications/unread' }),
       providesTags: [{ type: 'Notification', id: 'UNREAD' }],
     }),
-    getUnreadCount: builder.query<number, void>({
+    getUnreadCount: builder.query<CountLike, void>({
       query: () => ({ url: '/api/notifications/unread/count' }),
       providesTags: [{ type: 'Notification', id: 'COUNT' }],
     }),

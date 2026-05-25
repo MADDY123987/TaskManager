@@ -85,15 +85,36 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface SignupRequest {
+export interface RegisterRequest {
   name: string;
   email: string;
+}
+
+export interface VerifyOtpRequest {
+  name: string;
+  email: string;
+  otp: string;
   password: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  newPassword: string;
 }
 
 export interface AuthPayload {
   token: string;
   user: User;
+}
+
+export interface MessageResponse {
+  success?: boolean;
+  message?: string;
 }
 
 export interface CreateProjectRequest {
@@ -131,6 +152,14 @@ export interface Notification {
   referenceId?: ID;
   projectId?: ID;
   payload?: Record<string, unknown>;
+}
+
+export interface PageResponse<T> {
+  content?: T[];
+  totalPages?: number;
+  totalElements?: number;
+  number?: number;
+  size?: number;
 }
 
 export interface Comment {

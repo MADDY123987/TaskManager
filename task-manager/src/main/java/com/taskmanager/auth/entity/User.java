@@ -52,6 +52,12 @@ public class User {
     @Column(name = "notification_email_enabled", nullable = false)
     private boolean notificationEmailEnabled = true;
 
+    // ===== Email Verification =====
+
+    @Builder.Default
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false;
+
     // ===== Audit Fields =====
 
     @CreationTimestamp

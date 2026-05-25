@@ -1,0 +1,1 @@
+import{G as s}from"./index-ZGSsa6Tz.js";const t=r=>r?s(r).format("MMM D, YYYY"):"No date",a={TODO:"To do",IN_PROGRESS:"In progress",DONE:"Done"},e={LOW:"Low",MEDIUM:"Medium",HIGH:"High"},n=r=>r==="DONE"?"success":r==="IN_PROGRESS"?"primary":"default",i=r=>r==="HIGH"?"error":r==="MEDIUM"?"warning":"success";export{e as a,a as b,t as f,i as p,n as s};

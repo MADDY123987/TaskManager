@@ -79,12 +79,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                         try {
                             if (jwtUtil.validateToken(jwt)) {
                                 Long userId = jwtUtil.getUserIdFromToken(jwt);
-                                UserDetails userDetails = userDetailsService.loadUserById(userId);
-                                UsernamePasswordAuthenticationToken auth =
-                                        new UsernamePasswordAuthenticationToken(
-                                                userDetails, null, userDetails.getAuthorities());
-                                accessor.setUser(auth);
-                                log.debug("WebSocket authenticated user {}", userId);
+                                if (userId == null || userId <= 0) {
+                                    log.warn("WebSocket JWT contained an invalid user id");
+                                } else {
+                                    UserDetails userDetails = userDetailsService.loadUserById(userId);
+                                    UsernamePasswordAuthenticationToken auth =
+                                            new UsernamePasswordAuthenticationToken(
+                                                    userDetails, null, userDetails.getAuthorities());
+                                    accessor.setUser(auth);
+                                    log.debug("WebSocket authenticated user {}", userId);
+                                }
                             }
                         } catch (Exception ex) {
                             log.warn("WebSocket JWT auth failed: {}", ex.getMessage());

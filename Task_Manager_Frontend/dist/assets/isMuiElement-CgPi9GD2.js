@@ -1,1 +1,0 @@
-import{a7 as m}from"./index-DK-gco4j.js";function p(a,r){var i,t,e;return m.isValidElement(a)&&r.indexOf(a.type.muiName??((e=(t=(i=a.type)==null?void 0:i._payload)==null?void 0:t.value)==null?void 0:e.muiName))!==-1}export{p as i};

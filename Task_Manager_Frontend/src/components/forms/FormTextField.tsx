@@ -13,12 +13,16 @@ export function FormTextField<T extends FieldValues>({
       control={control}
       render={({ field, fieldState }) => (
         <TextField
-          {...field}
           {...props}
+          name={field.name}
           value={field.value ?? ''}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          inputRef={field.ref}
           error={Boolean(fieldState.error)}
           helperText={fieldState.error?.message ?? props.helperText}
           fullWidth
+          disabled={props.disabled ?? false}
         />
       )}
     />

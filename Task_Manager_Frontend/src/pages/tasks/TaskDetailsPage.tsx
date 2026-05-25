@@ -27,8 +27,14 @@ export function TaskDetailsPage() {
   if (!task) return <EmptyState title="Task not found" description="The requested task could not be loaded." />;
 
   const saveTask = async (values: TaskForm) => {
+    const payload = {
+      ...values,
+      assignedTo: values.assignedTo === '' || values.assignedTo === undefined ? null : Number(values.assignedTo),
+      dueDate: values.dueDate || null,
+    };
+    console.log('createTask payload', payload);
     try {
-      await updateTask({ taskId: task.id, data: { ...values, assignedTo: values.assignedTo || null, dueDate: values.dueDate || null } }).unwrap();
+      await updateTask({ taskId: task.id, data: payload }).unwrap();
       setEditOpen(false);
       notify('Task updated');
     } catch {
